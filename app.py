@@ -315,14 +315,28 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
 """, unsafe_allow_html=True)
 
 
-# ── Load Data ─────────────────────────────────────────────────────────────────
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 @st.cache_resource
 def load_data():
-    df = pd.read_pickle("df.pkl")
-    indices = pickle.load(open("indices.pkl", "rb"))
-    tfidf_matrix = pickle.load(open("tfidf_matrix.pkl", "rb"))
-    return df, indices, tfidf_matrix
+    # Load CSV instead of pkl
+    df = pd.read_csv("Movies.csv")
 
+    # Clean data
+    df['overview'] = df['overview'].fillna('')
+    df['title'] = df['title'].fillna('')
+
+    # TF-IDF creation (replaces tfidf_matrix.pkl)
+    vectorizer = TfidfVectorizer(
+        max_features=5000,
+        stop_words='english'
+    )
+    tfidf_matrix = vectorizer.fit_transform(df['overview'])
+
+    # Create indices (replaces indices.pkl)
+    indices = pd.Series(df.index, index=df['title']).drop_duplicates()
+
+    return df, indices, tfidf_matrix
 df, indices, tfidf_matrix = load_data()
 
 
